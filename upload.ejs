@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyNotes | Upload Your Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo-area">
+            <div class="logo-icon">N</div>
+            <span class="logo-text">OnlyNotes</span>
+        </div>
+        <div class="user-profile">
+            <a href="/profile" style="display: block; transition: opacity 0.3s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <img src="https://ui-avatars.com/api/?name=<%= name %>&background=a855f7&color=fff" style="width: 40px; height: 40px; border-radius: 50%;">
+            </a>
+        </div>
+    </header>
+    <div class="app-container">
+        <aside class="sidebar-left">
+            <div class="sidebar-group">
+                <p class="group-title">UTILITIES</p>
+                <a href="/" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-home text-purple-500"></i> Home Page</button>
+                </a>
+                <a href="/chat" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-message text-purple-500"></i> Chat</button>
+                </a>
+                <a href="/dashboard" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-receipt text-purple-500"></i> Dashboard</button>
+                </a>
+                <a href="/leaderboard" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-trophy text-purple-500"></i> Leaderboard</button>
+                </a>
+                <form action="/logout?_method=DELETE" method="POST" style="text-decoration: none;">
+                    <button type="submit" class="menu-item upload-btn"><i class="fa-solid fa-right-from-bracket text-purple-500"></i> Sign Out</button>
+                </form>
+            </div>
+        </aside>
+        <main class="upload-page-wrapper">
+            <form action="/upload" method="POST" class="note-form">
+                <div class="form-group">
+                    <label for="title">Note Title:</label>
+                    <input type="text" id="title" name="title" placeholder="e.g., Data Structures and Algorithms...">
+                </div>
+                <div class="form-group">
+                    <label for="tags">Tags:</label>
+                    <div class="input-container">
+                        <input type="text" id="tag-input" placeholder="e.g., DSA, AI, ML...">
+                        <div id="tag-chips"></div>
+                    </div>
+                    <input type="hidden" name="tags" id="hidden-tags">
+                </div>
+                <div class="form-group">
+                    <label for="subtitle">Description:</label>
+                    <input type="text" id="subtitle" name="subtitle" placeholder="Brief Description of your note...">
+                </div>
+                <div class="form-group">
+                    <label for="content">Write Notes:</label>
+                    <textarea class="text" id="content" name="content" rows="12" placeholder="Start typing your notes here..."></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Save Note</button>
+            </form>
+        </main>
+    </div>
+    <script>
+        const tagInput = document.getElementById('tag-input');
+        const chipContainer = document.getElementById('tag-chips');
+        const hiddenInput = document.getElementById('hidden-tags');
+        let tags = [];
+
+        tagInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tag = tagInput.value.trim();
+                
+                if (tag && !tags.includes(tag)) {
+                    tags.push(tag);
+                    renderChips();
+                    tagInput.value = '';
+                }
+            }
+        });
+
+        function renderChips() {
+            chipContainer.innerHTML = '';
+            tags.forEach((tag, index) => {
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.innerHTML = `${tag} <button type="button" onclick="removeTag(${index})">&times;</button>`;
+                chipContainer.appendChild(chip);
+            });
+            hiddenInput.value = tags.join(',');
+        }
+
+        function removeTag(index) {
+            tags.splice(index, 1);
+            renderChips();
+        }
+    </script>
+</body>
+</html>

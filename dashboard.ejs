@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | OnlyNotes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo-area">
+            <div class="logo-icon">N</div>
+            <span class="logo-text">OnlyNotes</span>
+        </div>
+        <div class="user-profile">
+            <a href="/profile" style="display: block; transition: opacity 0.3s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <img src="https://ui-avatars.com/api/?name=<%= name %>&background=a855f7&color=fff" style="width: 40px; height: 40px; border-radius: 50%;">
+            </a>
+        </div>
+    </header>
+    <div class="app-container">
+        <aside class="sidebar-left">
+            <div class="sidebar-group">
+                <p class="group-title">UTILITIES</p>
+                <a href="/" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-home text-purple-500"></i> Home Page</button>
+                </a>
+                <a href="/upload" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-plus text-purple-500"></i> Upload Note</button>
+                </a>
+                <a href="/chat" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-message text-purple-500"></i> Chat</button>
+                </a>
+                <a href="/leaderboard" style="text-decoration: none; color: inherit;">
+                  <button class="menu-item upload-btn"><i class="fa-solid fa-trophy text-purple-500"></i> Leaderboard</button>
+                </a>
+                <form action="/logout?_method=DELETE" method="POST" style="text-decoration: none;">
+                    <button type="submit" class="menu-item upload-btn"><i class="fa-solid fa-right-from-bracket text-purple-500"></i> Sign Out</button>
+                </form>
+            </div>
+        </aside>
+        <main class="chat-page-wrapper">
+            <div class="dashboard main">
+                <div class="dashboard cards">
+                    <div class="dashboard card"><h3>Your Notes</h3><p><%= stats.notes_count %></p></div>
+                    <div class="dashboard card"><h3>Upvotes</h3><p><%= stats.total_upvotes %></p></div>
+                    <div class="dashboard card"><h3>Saved</h3><p><%= stats.saved_count %></p></div>
+                </div>
+                <div class="dashboard notes-container">
+                    <% if (savedNotes.length > 0) { %>
+                        <% savedNotes.forEach(note => { %>
+                            <div class="note-card-wrapper" style="position: relative; width: fit-content;">
+                                <a href="javascript:void(0)" 
+                                   class="profile topic-card note-button" 
+                                   data-title="<%= note.title %>"
+                                   data-content="<%= note.content %>"
+                                   onclick="openNoteModal(this)">
+                                    <div class="card-inner" style="position: relative; padding-right: 40px;">                            
+                                        <% if (note.tags) { %>
+                                            <% note.tags.split(',').forEach(singleTag => { %>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 90%;">
+                                                    <span class="profile tag" style="margin: 0;"><%= singleTag %></span>
+                                                </div>
+                                            <% }) %>
+                                        <% } %>                                  
+                                        <h3 class="note-title"><%= note.title %></h3>                                   
+                                        <div class="note-info">                                      
+                                            <span><i class="fa-solid fa-file-lines"></i> by <%= note.author_name %></span>
+                                        </div>                    
+                                    </div>
+                                </a>
+                                <form action="/unsave-note/<%= note.note_id %>" method="POST" class="delete-form-inline">
+                                    <button type="submit" class="delete-icon-btn" title="Unsave Note">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                                <button type="button" class="delete-icon-btn" 
+                                    onclick="openReportModal('<%= note.note_id %>')" title="Report Note"
+                                    style="color: #facc15; border-color: rgba(250, 204, 21, 0.2); margin-top: 5px;">
+                                    <i class="fa-solid fa-flag"></i>
+                                </button>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p style="color: #b9b9c9; text-align: center; width: 100%; padding-top: 20px;">
+                            No saved notes found! Swipe right on the "For You" page to save.
+                        </p>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Note Modal -->
+    <div id="noteModal" class="modal-overlay" onclick="closeNoteModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeNoteModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <div id="modalContent" class="modal-content"></div>
+        </div>
+    </div>
+    <div id="reportModal" class="modal-overlay" style="display: none;">
+        <div class="report-modal-card">
+            <h2 style="color: #ff4444; margin-bottom: 15px;">
+                <i class="fa-solid fa-circle-exclamation"></i> Report Note
+            </h2>
+            <p style="color: #ccc; font-size: 14px; margin-bottom: 20px;">
+                Please explain why this content is inappropriate.
+            </p>
+            <input type="hidden" id="report-note-id">
+            <textarea id="report-reason" class="report-textarea" placeholder="Type reason here..."></textarea>
+            <div class="btn-container">
+                <button onclick="closeReportModal()" class="btn-cancel">Cancel</button>
+                <button onclick="submitReport()" class="btn-submit-report">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openNoteModal(element) {
+            const title = element.getAttribute('data-title');
+            const content = element.getAttribute('data-content');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalContent').innerText = content;
+            document.getElementById('noteModal').style.display = 'flex';            
+            document.body.style.overflow = 'hidden'; 
+        }
+        function closeNoteModal(event) {
+            if (event && event.target !== document.getElementById('noteModal')) return;            
+            document.getElementById('noteModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; 
+        }
+        function openReportModal(noteId) {
+            document.getElementById('report-note-id').value = noteId;
+            document.getElementById('report-reason').value = "";
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+        function submitReport() {
+            const noteId = document.getElementById('report-note-id').value;
+            const reason = document.getElementById('report-reason').value;
+            if (!reason.trim()) {
+                alert("Please enter a reason.");
+                return;
+            }
+            fetch('/report-note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ noteId, reason })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Reported! The note is hidden and will be reviewed by an admin.");
+                location.reload(); 
+            });
+        }
+    </script>
+</body>
+</html>
